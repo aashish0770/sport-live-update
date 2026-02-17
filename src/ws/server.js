@@ -7,7 +7,7 @@ function sendJson(socket, payload) {
 
 function boardcast(wss, payload) {
   for (const client of wss.clients) {
-    if (client.readyState !== WebSocket.OPEN) return;
+    if (client.readyState !== WebSocket.OPEN) continue;
 
     client.send(JSON.stringify(payload));
   }
@@ -21,9 +21,27 @@ export function attachWebSocketServer(server) {
   });
 
   wss.on("connection", (ws) => {
+    ws.isAlive = true;
+    ws.on("pong", () => {
+      ws.isAlive = true;
+    });
     sendJson(ws, {
       type: "welcome",
       message: "Welcome to the WebSocket server!",
+    });
+    const interval = setInterval(() => {
+      wss.clients.forEach((ws) => {
+        if (!ws.isAlive) {
+          ws.terminate();
+          return;
+        }
+        ws.isAlive = false;
+        ws.ping();
+      });
+    }, 30000);
+
+    ws.on("close", () => {
+      clearInterval(interval);
     });
     ws.on("error", console.error);
   });
