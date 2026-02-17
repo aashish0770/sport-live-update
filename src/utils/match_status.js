@@ -25,10 +25,6 @@ export function getMatchStatus(
     return MATCH_STATUS.FINISHED;
   }
 
-  if (now < start && now > end) {
-    return MATCH_STATUS.CANCELED;
-  }
-
   return MATCH_STATUS.LIVE;
 }
 
